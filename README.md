@@ -8,7 +8,7 @@ It was modifed to work over Tor for anonymous scanning.
 Tmap is a python script that requries a socks module and a running Tor deamon on localhost.
 
 ### Usage:
-./tmap [-h] -H HOSTS [-p PORTS] [-t TIMEOUT] [--clearnet] [--torport TORPORT]
+`./tmap [-h] -H HOSTS [-p PORTS] [-t TIMEOUT] [--clearnet] [--torport TORPORT]`
 
 
 Multiple hosts can be specified using a comma (-H 1.1.1.1,2.2.2.2).
