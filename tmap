@@ -16,6 +16,7 @@ def connScan(host, port, wait, notor):
 	try:
 		sckt.connect((host, port))
 		print("[+] port {} on {} is open".format(port, host))
+		#sckt.shutdown(2)
 		sckt.close()
 		return True
 	except:
@@ -28,7 +29,7 @@ def portScan(host, ports, wait, notor):
 	for p in ports:
 		if connScan(host, p, wait, notor):
 			openPorts += 1
-	print("{} open ports on {}.".format(openPorts, host))
+	print("{} open ports on {} .".format(openPorts, host))
 
 def main():
 	startTime = time.time()
