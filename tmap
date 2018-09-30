@@ -2,6 +2,7 @@
 from socket import *
 import socks
 import argparse
+import time
 
 ## This function tries to open a connection on a specific port
 def connScan(host, port, wait, notor):
@@ -26,6 +27,8 @@ def portScan(host, ports, wait, notor):
 		connScan(host, p, wait, notor)
 
 def main():
+	startTime = time.time()
+
 	## Define and parse the arguments
 	parser = argparse.ArgumentParser(description="Simple port scanner that works over Tor")
 	parser.add_argument("HOSTS", help="IP or domain to scan", default="empty_host", nargs="?")
@@ -41,7 +44,7 @@ def main():
 	if args.HOSTS == "empty_host":
 		if args.tgtHost == "empty_host_option":
 			parser.print_help()
-			print "\nHost must be specified"
+			print ("Host must be specified")
 			exit()
 		else:
 			args.HOSTS = args.tgtHost
@@ -53,13 +56,14 @@ def main():
 
 	## Load specified ports into PORTS list
 	if "-" not in args.tgtPort:
-		PORTS = map(int, args.tgtPort.split(","))
+	        PORTS = map(int, args.tgtPort.split(","))
 	else:
 		PORTS = map(int, args.tgtPort.split("-"))
 		if len(PORTS) != 2:
 			parser.print_help()
 			exit()
-		PORTS = range(PORTS[0],PORTS[1])
+		else:
+			PORTS = range(PORTS[0],PORTS[1]+1)
 
 	## Load other variables
 	HOSTS = args.HOSTS.split(",")
@@ -72,6 +76,9 @@ def main():
 	## Scan each host in HOSTS list
 	for h in HOSTS:
 		portScan(h, PORTS, WAIT_TIME, CLEARNET)
+	endTime = time.time()
+	totalTime = endTime - startTime
+	print("Scan done in {} seconds".format(round(totalTime, 2)))
 
 if __name__ == "__main__":
-	 main()
+	main()

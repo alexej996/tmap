@@ -29,3 +29,6 @@ Scan port 80 on facebookcorewwwi.onion
 `./tmap -H 192.168.0.1 -p 0-1024 --clearnet`
 
 Scan ports from 0 to 1024 on 192.168.0.1 without routing traffic through Tor.
+
+### License
+**GPL3**
