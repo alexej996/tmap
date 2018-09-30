@@ -18,14 +18,14 @@ Ports can be either specified as a range (-p 20-100) or separated with a comma (
 
 ### Examples
 
-./tmap -H 1.1.1.1 -p 53,80
+`./tmap -H 1.1.1.1 -p 53,80`
 
 Scans ports 53 and 80 on 1.1.1.1
 
-./tmap -H facebookcorewwwi.onion -p 80
+`./tmap -H facebookcorewwwi.onion -p 80`
 
 Scan port 80 on facebookcorewwwi.onion
 
-./tmap -H 192.168.0.1 -p 0-1024 --clearnet
+`./tmap -H 192.168.0.1 -p 0-1024 --clearnet`
 
 Scan ports from 0 to 1024 on 192.168.0.1 without routing traffic through Tor.
