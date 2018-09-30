@@ -28,7 +28,7 @@ def portScan(host, ports, wait, notor):
 def main():
 	## Define and parse the arguments
 	parser = argparse.ArgumentParser(description="Simple port scanner that works over Tor")
-	parser.add_argument("-H", "--hosts", metavar="HOSTS", dest="tgtHost", help="IPv4 address to scan", required=True)
+	parser.add_argument("-H", "--hosts", metavar="HOSTS", dest="tgtHost", help="IP or domain to scan", required=True)
 	parser.add_argument("-p", "--ports", metavar="PORTS", dest="tgtPort", help="ports to scan", default="80")
 	parser.add_argument("-t", "--timeout", metavar="TIMEOUT", dest="sockTimeout", type=int, help="seconds to wait before connection timeout for each port", default=3)
 	parser.add_argument("--clearnet", dest="clearnet", help="don't use Tor for scanning", action="store_true")
