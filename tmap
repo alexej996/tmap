@@ -9,6 +9,7 @@ def connScan(host, port, wait, notor):
 	## If notor is set to True, it doesn't use the socks proxy
 	if notor:
 		sckt = socket(AF_INET, SOCK_STREAM)
+		sckt.settimeout(wait)
 	else:
 		sckt = socks.socksocket()
 		sckt.settimeout(wait)
@@ -38,7 +39,7 @@ def main():
 	parser.add_argument("HOSTS", help="IP or domain to scan", default="empty_host", nargs="?")
 	parser.add_argument("-H", "--hosts", metavar="HOSTS", dest="tgtHost", help="IP or domain to scan", default="empty_host_option")
 	parser.add_argument("-p", "--ports", metavar="PORTS", dest="tgtPort", help="ports to scan", default="21,22,23,25,53,80,443,8080,8333,9050,9150")
-	parser.add_argument("-t", "--timeout", metavar="TIMEOUT", dest="sockTimeout", type=int, help="seconds to wait before connection timeout for each port", default=3)
+	parser.add_argument("-t", "--timeout", metavar="TIMEOUT", dest="sockTimeout", type=int, help="seconds to wait before connection timeout for each port", default=1)
 	parser.add_argument("--clearnet", dest="clearnet", help="don't use Tor for scanning", action="store_true")
 	parser.add_argument("--torport", metavar="TORPORT", dest="torPort", type=int, help="port for Tor proxy", default="9050")
 
