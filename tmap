@@ -17,14 +17,18 @@ def connScan(host, port, wait, notor):
 		sckt.connect((host, port))
 		print("[+] port {} on {} is open".format(port, host))
 		sckt.close()
+		return True
 	except:
 		pass
 
 
 ## This function goes throgh all ports and calls connScan for each one
 def portScan(host, ports, wait, notor):
+	openPorts = 0
 	for p in ports:
-		connScan(host, p, wait, notor)
+		if connScan(host, p, wait, notor):
+			openPorts += 1
+	print("{} open ports on {}.".format(openPorts, host))
 
 def main():
 	startTime = time.time()
@@ -56,9 +60,9 @@ def main():
 
 	## Load specified ports into PORTS list
 	if "-" not in args.tgtPort:
-	        PORTS = map(int, args.tgtPort.split(","))
+	        PORTS = list(map(int, args.tgtPort.split(",")))
 	else:
-		PORTS = map(int, args.tgtPort.split("-"))
+		PORTS = list(map(int, args.tgtPort.split("-")))
 		if len(PORTS) != 2:
 			parser.print_help()
 			exit()
@@ -76,6 +80,7 @@ def main():
 	## Scan each host in HOSTS list
 	for h in HOSTS:
 		portScan(h, PORTS, WAIT_TIME, CLEARNET)
+
 	endTime = time.time()
 	totalTime = endTime - startTime
 	print("Scan done in {} seconds".format(round(totalTime, 2)))
