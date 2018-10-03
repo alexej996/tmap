@@ -63,10 +63,14 @@ def main():
 
 	## Load specified ports into PORTS list
 	if "-" not in args.tgtPort:
-	        PORTS = list(map(int, args.tgtPort.split(",")))
+	        try:
+			PORTS = list(map(int, args.tgtPort.split(",")))
+		except:
+			parser.print_help()
+			exit()
 	else:
 		PORTS = list(map(int, args.tgtPort.split("-")))
-		if len(PORTS) != 2:
+		if len(PORTS) != 2 or PORTS[0]>PORTS[1]:
 			parser.print_help()
 			exit()
 		else:
