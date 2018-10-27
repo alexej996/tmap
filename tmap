@@ -73,7 +73,7 @@ def main():
 
 	## Load specified ports into PORTS list
 	if "-" not in args.tgtPort:
-	        try:
+		try:
 			PORTS = list(map(int, args.tgtPort.split(",")))
 		except:
 			parser.print_help()
