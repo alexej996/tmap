@@ -14,10 +14,9 @@ def connScan(host, port, wait, notor):
 		sckt = socks.socksocket()
 
 	sckt.settimeout(wait)
-	## Try to connect, print to stdout on success
+	## Try to connect, return True on success
 	try:
 		sckt.connect((host, port))
-		print("[+] port {} on {} is open".format(port, host))
 		sckt.close()
 		return True
 	except KeyboardInterrupt:
@@ -32,6 +31,7 @@ def portScan(host, ports, wait, notor):
 	for p in ports:
 		if connScan(host, p, wait, notor):
 			openPorts += 1
+			print("[+] port {} on {} is open".format(p, host))
 	print("{} open ports on {} .".format(openPorts, host))
 
 def main():
