@@ -94,6 +94,13 @@ def main():
 	if args.clearnet:
 		CLEARNET=True
 
+	if CLEARNET == False:
+		if connScan("127.0.0.1", args.torPort, 3, True):
+			pass
+		else:
+			print("Tor is not running on port {}.".format(args.torPort))
+			exit()
+
 	## Scan each host in HOSTS list
 	for h in HOSTS:
 		if len(h.split("/")) == 2:
