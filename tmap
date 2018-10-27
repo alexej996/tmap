@@ -3,6 +3,7 @@ from socket import *
 import socks
 import argparse
 import time
+from ipaddress import *
 
 ## This function tries to open a connection on a specific port
 def connScan(host, port, wait, notor):
@@ -95,7 +96,12 @@ def main():
 
 	## Scan each host in HOSTS list
 	for h in HOSTS:
-		portScan(h, PORTS, WAIT_TIME, CLEARNET)
+		if len(h.split("/")) == 2:
+			ips = IPv4Network(unicode(h))
+			for i in ips.hosts():
+				portScan(str(i), PORTS, WAIT_TIME, CLEARNET)
+		else:
+			portScan(h, PORTS, WAIT_TIME, CLEARNET)
 
 	endTime = time.time()
 	totalTime = endTime - startTime
