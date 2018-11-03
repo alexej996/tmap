@@ -104,11 +104,19 @@ def main():
 	## Scan each host in HOSTS list
 	for h in HOSTS:
 		if len(h.split("/")) == 2:
-			ips = IPv4Network(unicode(h))
-			for i in ips.hosts():
-				portScan(str(i), PORTS, WAIT_TIME, CLEARNET)
-		else:
+			try:
+				ips = IPv4Network(unicode(h))
+				for i in ips.hosts():
+					portScan(str(i), PORTS, WAIT_TIME, CLEARNET)
+			except:
+				parser.print_help()
+				exit()
+
+		elif len(h.split("/")) < 2:
 			portScan(h, PORTS, WAIT_TIME, CLEARNET)
+		else:
+			parser.print_help()
+			exit()
 
 	endTime = time.time()
 	totalTime = endTime - startTime
