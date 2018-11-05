@@ -5,7 +5,7 @@ import argparse
 import time
 from ipaddress import *
 
-## This function tries to open a connection on a specific port
+## This function tries to open a connection on a specific port, returns True if successful
 def connScan(host, port, wait, notor):
 	## If notor is set to True, it doesn't use the socks proxy
 	if notor:
@@ -25,7 +25,7 @@ def connScan(host, port, wait, notor):
 		return False
 
 
-## This function goes throgh all ports and calls connScan for each one
+## This function goes throgh all ports and calls connScan for each one, returns list of open ports
 def portScan(host, ports, wait, notor):
 	openports = list()
 	for p in ports:
@@ -33,7 +33,7 @@ def portScan(host, ports, wait, notor):
 			openports.append(p)
 	return openports
 
-## This function goes throgh all hosts and calls portScan for each one
+## This function goes throgh all hosts and calls portScan for each one, returns dictionary of hosts with open ports
 def hostScan(host, ports, wait, notor):
 	ret = dict()
 	## Check if python version 3
@@ -66,6 +66,7 @@ def hostScan(host, ports, wait, notor):
 	return ret
 
 def main():
+	## Record time of program starting in seconds
 	startTime = time.time()
 
 	## Define and parse the arguments
@@ -88,6 +89,9 @@ def main():
 		print("There is NO WARRANTY, to the extent permitted by law.")
 		exit()
 
+	## Set Tor as default Tor proxy for the scanner
+	socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", args.torPort)
+
 	## Combine HOST and --hosts values
 	if args.HOSTS == "empty_host":
 		if args.tgtHost == "empty_host_option":
@@ -100,12 +104,10 @@ def main():
 		if args.tgtHost != "empty_host_option":
 			args.HOSTS = args.HOSTS + "," + args.tgtHost
 
-	## Set Tor as default Tor proxy for the scanner
-	socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", args.torPort)
-
 	## Load specified ports into PORTS list
 	PORTS = list()
 	for p in args.tgtPort.split(","):
+		## If p is not a range, add it to the list of ports to scan
 		if "-" not in p:
 			try:
 				p = int(p)
@@ -113,13 +115,15 @@ def main():
 			except:
 				parser.print_help()
 				exit()
+		## If p is a range, add a range of ports to the list of ports to scan
 		else:
 			try:
 				p = list(map(int, p.split("-")))
 			except:
 				parser.print_help()
 				exit()
-			if len(p) != 2 or p[0]>p[1]:
+			## Range needs to be defined as exactly two integers separated by "-"
+			if len(p) != 2 or p[0] > p[1]:
 				parser.print_help()
 				exit()
 			else:
@@ -134,12 +138,16 @@ def main():
 	if args.clearnet:
 		CLEARNET=True
 
+	## Check if Tor is running if CLEARNET is False
 	if CLEARNET == False:
 		if connScan("127.0.0.1", args.torPort, 3, True):
 			pass
 		else:
 			print("Tor is not running on port {}.".format(args.torPort))
 			exit()
+
+	## Display message that scan is starting
+	print("Starting a scan...")
 
 	## Scan each host in HOSTS list
 	r = dict()
@@ -149,9 +157,13 @@ def main():
 			if len(r[i]) != 0:
 				print('{} open ports: {}'.format(i, str(r[i])))
 
+	## Record time of program stopping and display the time running to the user
 	endTime = time.time()
 	totalTime = endTime - startTime
 	print("Scan done in {} seconds".format(round(totalTime, 2)))
+
+	## We are done here
+	exit()
 
 if __name__ == "__main__":
 	main()
