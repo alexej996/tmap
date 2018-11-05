@@ -14,7 +14,7 @@ def connScan(host, port, wait, notor):
 		sckt = socks.socksocket()
 
 	sckt.settimeout(wait)
-	## Try to connect, return True on success
+	## Try to connect, return True on success and False on failure
 	try:
 		sckt.connect((host, port))
 		sckt.close()
@@ -22,17 +22,48 @@ def connScan(host, port, wait, notor):
 	except KeyboardInterrupt:
 		exit()
 	except:
-		pass
+		return False
 
 
 ## This function goes throgh all ports and calls connScan for each one
 def portScan(host, ports, wait, notor):
-	openPorts = 0
+	openports = list()
 	for p in ports:
 		if connScan(host, p, wait, notor):
-			openPorts += 1
-			print("[+] port {} on {} is open".format(p, host))
-	print("{} open ports on {} .".format(openPorts, host))
+			openports.append(p)
+	return openports
+
+## This function goes throgh all hosts and calls portScan for each one
+def hostScan(host, ports, wait, notor):
+	ret = dict()
+	## Check if python version 3
+	try:
+		host = unicode(host)
+	except:
+		pass
+
+	## Check if host is a network range, don't use tor for private IPs
+	try:
+		ips = ip_network(host)
+		if ips.num_addresses > 1:
+			for ip in ips.hosts():
+				if ip.is_private:
+					ret[str(ip)] = portScan(str(ip), ports, wait, True)
+				else:
+					ret[str(ip)] = portScan(str(ip), ports, wait, notor)
+		else:
+			if ips.is_private:
+				ret[str(host)] = portScan(str(host), ports, wait, True)
+			else:
+				ret[str(host)] = portScan(str(host), ports, wait, notor)
+	## Otherwise scan host as usual
+	except:
+		if host == 'localhost':
+			ret[str(host)] = portScan(str(host), ports, wait, True)
+		else:
+			ret[str(host)] = portScan(str(host), ports, wait, notor)
+
+	return ret
 
 def main():
 	startTime = time.time()
@@ -68,6 +99,7 @@ def main():
 	else:
 		if args.tgtHost != "empty_host_option":
 			args.HOSTS = args.HOSTS + "," + args.tgtHost
+
 	## Set Tor as default Tor proxy for the scanner
 	socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", args.torPort)
 
@@ -110,21 +142,12 @@ def main():
 			exit()
 
 	## Scan each host in HOSTS list
+	r = dict()
 	for h in HOSTS:
-		if len(h.split("/")) == 2:
-			try:
-				ips = IPv4Network(unicode(h))
-				for i in ips.hosts():
-					portScan(str(i), PORTS, WAIT_TIME, CLEARNET)
-			except:
-				parser.print_help()
-				exit()
-
-		elif len(h.split("/")) < 2:
-			portScan(h, PORTS, WAIT_TIME, CLEARNET)
-		else:
-			parser.print_help()
-			exit()
+		r = hostScan(h, PORTS, WAIT_TIME, CLEARNET)
+		for i in r.keys():
+			if len(r[i]) != 0:
+				print('{} open ports: {}'.format(i, str(r[i])))
 
 	endTime = time.time()
 	totalTime = endTime - startTime
