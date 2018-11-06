@@ -72,14 +72,14 @@ def main():
 	startTime = time.time()
 
 	## Define and parse the arguments
-	parser = argparse.ArgumentParser(description="Simple port scanner that works over Tor")
-	parser.add_argument("--version", dest="version", help="print version info and exit", action="store_true")
-	parser.add_argument("HOSTS", help="IP or domain to scan", default="empty_host", nargs="?")
-	parser.add_argument("-H", "--hosts", metavar="HOSTS", dest="tgtHost", help="IP or domain to scan", default="empty_host_option")
-	parser.add_argument("-p", "--ports", metavar="PORTS", dest="tgtPort", help="ports to scan", default="20-25,53,80-85,443-445,8080,8333,9050,9150")
-	parser.add_argument("-t", "--timeout", metavar="TIMEOUT", dest="sockTimeout", type=int, help="seconds to wait before connection timeout for each port", default=2)
-	parser.add_argument("--clearnet", dest="clearnet", help="don't use Tor for scanning", action="store_true")
-	parser.add_argument("--torport", metavar="TORPORT", dest="torPort", type=int, help="port for Tor proxy", default="9050")
+	parser = argparse.ArgumentParser(description="Simple stateful port scanner that works over Tor")
+	parser.add_argument("--version", dest="version", help="print version information and exit", action="store_true")
+	parser.add_argument("HOSTS", help="IP address or domain to scan", default="empty_host", nargs="?")
+	parser.add_argument("-H", "--hosts", metavar="HOSTS", dest="tgtHost", help="IP address or domain to scan", default="empty_host_option")
+	parser.add_argument("-p", "--ports", metavar="PORTS", dest="tgtPort", help="ports to scan, seperated by a comma", default="20-25,53,80-85,443-445,8080,8333,9050,9150")
+	parser.add_argument("-t", "--timeout", metavar="TIMEOUT", dest="sockTimeout", type=int, help="seconds to wait before connection timeout for each port", default=3)
+	parser.add_argument("--clearnet", dest="clearnet", help="don't use Tor for scanning, connect directly instead", action="store_true")
+	parser.add_argument("--torport", metavar="TORPORT", dest="torPort", type=int, help="port on which Tor is listening on", default="9050")
 
 	args = parser.parse_args()
 
