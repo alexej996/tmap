@@ -29,6 +29,8 @@ def connScan(host, port, wait, notor):
 def portScan(host, ports, wait, notor):
 	openports = list()
 	for p in ports:
+		if p > 65535:
+			pass
 		if connScan(host, p, wait, notor):
 			openports.append(p)
 	return openports
@@ -114,6 +116,7 @@ def main():
 				PORTS.append(p)
 			except:
 				parser.print_help()
+				print("Ports must be integers")
 				exit()
 		## If p is a range, add a range of ports to the list of ports to scan
 		else:
@@ -121,10 +124,12 @@ def main():
 				p = list(map(int, p.split("-")))
 			except:
 				parser.print_help()
+				print("Ports in a range must be integers")
 				exit()
 			## Range needs to be defined as exactly two integers separated by "-"
 			if len(p) != 2 or p[0] > p[1]:
 				parser.print_help()
+				print("Port range improperly defined")
 				exit()
 			else:
 				p = list(range(p[0],p[1]+1))
