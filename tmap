@@ -80,6 +80,7 @@ def main():
 	parser.add_argument("-t", "--timeout", metavar="TIMEOUT", dest="sockTimeout", type=int, help="seconds to wait before connection timeout for each port", default=3)
 	parser.add_argument("--clearnet", dest="clearnet", help="don't use Tor for scanning, connect directly instead", action="store_true")
 	parser.add_argument("--torport", metavar="TORPORT", dest="torPort", type=int, help="port on which Tor is listening on", default="9050")
+	parser.add_argument("--output", metavar="OUTFILE", dest="outFile", help="write scan results to output file", default="empty_outfile")
 
 	args = parser.parse_args()
 
@@ -139,6 +140,7 @@ def main():
 	HOSTS = args.HOSTS.split(",")
 	WAIT_TIME = args.sockTimeout
 	CLEARNET = False
+	OUTFILE = args.outFile
 
 	if args.clearnet:
 		CLEARNET=True
@@ -151,6 +153,12 @@ def main():
 			print("Tor is not running on port {}.".format(args.torPort))
 			exit()
 
+	## Checking for file output
+	if(OUTFILE != "empty_outfile"):
+		f = open(OUTFILE, "w")
+	
+			
+	
 	## Display message that scan is starting
 	print("Starting a scan...")
 
@@ -160,12 +168,22 @@ def main():
 		r = hostScan(h, PORTS, WAIT_TIME, CLEARNET)
 		for i in r.keys():
 			if len(r[i]) != 0:
-				print('{} open ports: {}'.format(i, str(r[i])))
+				if(OUTFILE == "empty_outfile"):
+					print('{} open ports: {}'.format(i, str(r[i])))
+				else:
+					f.write('{} open ports: {}'.format(i, str(r[i])))
 
 	## Record time of program stopping and display the time running to the user
 	endTime = time.time()
-	totalTime = endTime - startTime
-	print("Scan done in {} seconds".format(round(totalTime, 2)))
+	totalTime = round(endTime - startTime, 2)
+
+	if(OUTFILE == "empty_outfile"):
+		print("Scan done in {} seconds".format(totalTime))
+	else:
+		f.write("\n")
+		f.write("Scan done in {} seconds".format(totalTime))
+		f.close()
+		print("Results written to {}".format(OUTFILE))
 
 	## We are done here
 	exit()
