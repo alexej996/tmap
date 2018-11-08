@@ -7,7 +7,7 @@ It was modifed to work over **Tor** for anonymous and hidden service scanning.
 ### Dependencies
 Tmap is a python script that requries the **socks** module and a running Tor deamon on localhost.
 
-Both **python2** and **pyhton3** are supported.
+Tmap is built to support **pyhton3**.
 
 ### Usage:
 `./tmap [-h] -H HOSTS [-p PORTS] [-t TIMEOUT] [--clearnet] [--torport TORPORT]`
@@ -39,9 +39,9 @@ Scan port 80 on facebookcorewwwi.onion
 
 Scan ports from 0 to 1024 on 192.168.0.1 without routing traffic through Tor.
 
-`./tmap 192.168.1.0/24 -p 80`
+`./tmap 192.168.1.0/24,google.com -p 80`
 
-Scan the whole 192.168.1.0/24 range for an open port 80 without Tor.
+Scan the whole 192.168.1.0/24 range for an open port 80 without Tor and goole.com with Tor.
 
 `./tmap 8.8.8.8/31 -p 53`
 
