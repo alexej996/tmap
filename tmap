@@ -30,8 +30,8 @@ def portScan(host, ports, wait, notor):
 	openports = list()
 	for p in ports:
 		if p > 65535:
-			pass
-		if connScan(host, p, wait, notor):
+			return openports
+		elif connScan(host, p, wait, notor):
 			openports.append(p)
 	return openports
 
@@ -164,6 +164,10 @@ def main():
 	r = dict()
 	for h in HOSTS:
 		r = hostScan(h, PORTS, WAIT_TIME, CLEARNET)
+		if OUTFILE == "empty_outfile":
+			print("Results for: {}".format(h))
+		else:
+			f.write("Results for: {}".format(h))
 		for i in r.keys():
 			if len(r[i]) != 0:
 				if OUTFILE == "empty_outfile":
