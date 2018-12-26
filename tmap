@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 from socket import *
 import socks
 import argparse
