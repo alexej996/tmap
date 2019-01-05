@@ -6,7 +6,7 @@ import time
 from ipaddress import *
 import threading
 
-## This function tries to open a connection on a specific port, returns True if successful
+## Open connection on specific port, return True if successful
 def connScan(host, port, wait, notor, openports):
 	## If notor is set to True, it doesn't use the socks proxy
 	if notor:
@@ -15,7 +15,7 @@ def connScan(host, port, wait, notor, openports):
 		sckt = socks.socksocket()
 
 	sckt.settimeout(wait)
-	## Try to connect, return True on success and False on failure
+	## Try to connect, return True on success and add to openports, return False on failure
 	try:
 		sckt.connect((host, port))
 		sckt.close()
@@ -27,7 +27,8 @@ def connScan(host, port, wait, notor, openports):
 		return False
 
 
-## This function goes throgh all ports and calls connScan for each one, returns list of open ports
+## Go through all ports and call connScan for each, return list of open ports
+## If more threads than JOBS, wait until they finish
 def portScan(host, ports, wait, notor, jobs):
 	openports = list()
 	threads = list()
@@ -43,12 +44,13 @@ def portScan(host, ports, wait, notor, jobs):
 		threads.append(thread)
 		thread.start()
 
+	## Wait until all threads are done
 	for thread in threads:
 		thread.join()
 
 	return openports
 
-## This function goes throgh all hosts and calls portScan for each one, returns dictionary of hosts with open ports
+## Go through all hosts and call portScan for each one, return dictionary of hosts with their open ports
 def hostScan(host, ports, wait, notor, jobs):
 	ret = dict()
 	## Check if python version 3
@@ -160,7 +162,7 @@ def main():
 	if args.clearnet:
 		CLEARNET=True
 
-	## Check if Tor is running if CLEARNET is False
+	## Check if Tor is running
 	emptylist=list()
 	if CLEARNET == False:
 		if connScan("127.0.0.1", args.torPort, 3, True, emptylist):
