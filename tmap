@@ -4,9 +4,10 @@ import socks
 import argparse
 import time
 from ipaddress import *
+import threading
 
 ## This function tries to open a connection on a specific port, returns True if successful
-def connScan(host, port, wait, notor):
+def connScan(host, port, wait, notor, openports):
 	## If notor is set to True, it doesn't use the socks proxy
 	if notor:
 		sckt = socket(AF_INET, SOCK_STREAM)
@@ -18,6 +19,7 @@ def connScan(host, port, wait, notor):
 	try:
 		sckt.connect((host, port))
 		sckt.close()
+		openports.append(port)
 		return True
 	except KeyboardInterrupt:
 		exit()
@@ -26,17 +28,28 @@ def connScan(host, port, wait, notor):
 
 
 ## This function goes throgh all ports and calls connScan for each one, returns list of open ports
-def portScan(host, ports, wait, notor):
+def portScan(host, ports, wait, notor, jobs):
 	openports = list()
+	threads = list()
+
 	for p in ports:
 		if p > 65535:
 			return openports
-		elif connScan(host, p, wait, notor):
-			openports.append(p)
+
+		while  threading.activeCount() >= jobs + 1:
+			pass
+
+		thread=threading.Thread(target=connScan,args=(host, p, wait, notor, openports))
+		threads.append(thread)
+		thread.start()
+
+	for thread in threads:
+		thread.join()
+
 	return openports
 
 ## This function goes throgh all hosts and calls portScan for each one, returns dictionary of hosts with open ports
-def hostScan(host, ports, wait, notor):
+def hostScan(host, ports, wait, notor, jobs):
 	ret = dict()
 	## Check if python version 3
 	try:
@@ -50,20 +63,20 @@ def hostScan(host, ports, wait, notor):
 		if ips.num_addresses > 1:
 			for ip in ips.hosts():
 				if ip.is_private:
-					ret[str(ip)] = portScan(str(ip), ports, wait, True)
+					ret[str(ip)] = portScan(str(ip), ports, wait, True. jobs)
 				else:
-					ret[str(ip)] = portScan(str(ip), ports, wait, notor)
+					ret[str(ip)] = portScan(str(ip), ports, wait, notor, jobs)
 		else:
 			if ips.is_private:
-				ret[str(host)] = portScan(str(host), ports, wait, True)
+				ret[str(host)] = portScan(str(host), ports, wait, True, jobs)
 			else:
-				ret[str(host)] = portScan(str(host), ports, wait, notor)
+				ret[str(host)] = portScan(str(host), ports, wait, notor, jobs)
 	## Otherwise scan host as usual
 	except:
 		if host == 'localhost':
-			ret[str(host)] = portScan(str(host), ports, wait, True)
+			ret[str(host)] = portScan(str(host), ports, wait, True, jobs)
 		else:
-			ret[str(host)] = portScan(str(host), ports, wait, notor)
+			ret[str(host)] = portScan(str(host), ports, wait, notor, jobs)
 
 	return ret
 
@@ -80,6 +93,7 @@ def main():
 	parser.add_argument("-t", "--timeout", metavar="TIMEOUT", dest="sockTimeout", type=int, help="seconds to wait before connection timeout for each port", default=3)
 	parser.add_argument("--clearnet", dest="clearnet", help="don't use Tor for scanning, connect directly instead", action="store_true")
 	parser.add_argument("--torport", metavar="TORPORT", dest="torPort", type=int, help="port on which Tor is listening on", default="9050")
+	parser.add_argument("-j", "--jobs", metavar="JOBS", dest="jobs", type=int, help="maximum number of open connections at the same time", default="8")
 	parser.add_argument("--output", metavar="OUTFILE", dest="outFile", help="write scan results to output file", default="empty_outfile")
 
 	args = parser.parse_args()
@@ -141,13 +155,15 @@ def main():
 	WAIT_TIME = args.sockTimeout
 	CLEARNET = False
 	OUTFILE = args.outFile
+	JOBS = args.jobs
 
 	if args.clearnet:
 		CLEARNET=True
 
 	## Check if Tor is running if CLEARNET is False
+	emptylist=list()
 	if CLEARNET == False:
-		if connScan("127.0.0.1", args.torPort, 3, True):
+		if connScan("127.0.0.1", args.torPort, 3, True, emptylist):
 			pass
 		else:
 			print("Tor is not running on port {}.".format(args.torPort))
@@ -163,7 +179,7 @@ def main():
 	## Scan each host in HOSTS list
 	r = dict()
 	for h in HOSTS:
-		r = hostScan(h, PORTS, WAIT_TIME, CLEARNET)
+		r = hostScan(h, PORTS, WAIT_TIME, CLEARNET, JOBS)
 		if OUTFILE == "empty_outfile":
 			print("Results for: {}".format(h))
 		else:
