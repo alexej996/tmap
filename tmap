@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import sys
 from socket import *
 import socks
 import argparse
@@ -199,49 +200,38 @@ def main():
 	## Checking for file output
 	if OUTFILE != "empty_outfile":
 		f = open(OUTFILE, "w")
+	else:
+		f = sys.stdout
 
 	## Display message that scan is starting
-	print("Starting a scan...")
+	f.write("Starting a scan...\n")
 
 	## Scan each host in HOSTS list
 	r = dict()
 	for h in HOSTS:
 		r = hostScan(h, PORTS, WAIT_TIME, CLEARNET, JOBS)
-		if OUTFILE == "empty_outfile":
-			print("Results for: {}".format(h))
-		else:
-			f.write("Results for: {}\n".format(h))
+		f.write("Results for: {}\n".format(h))
 		for i in r.keys():
 			if len(r[i]) != 0:
-				if OUTFILE == "empty_outfile":
-					print('{} open ports: {}'.format(i, str(r[i])))
-					if BANNER:
-						print('PORT\tBANNER')
-				else:
-					f.write('{} open ports: {}\n'.format(i, str(r[i])))
-					if BANNER:
-						f.write('PORT\tBANNER\n')
+				f.write('{} open ports: {}\n'.format(i, str(r[i])))
+				if BANNER:
+					f.write('PORT\tBANNER\n')
 				if BANNER:
 					for j in r[i]:
 						banner = getBanner(i,j,WAIT_TIME, CLEARNET)
 						if banner == "banner_error" or banner == '':
 							continue
-						if OUTFILE == "empty_outfile":
-							print('{}\t{}'.format(j,banner))
-						else:
-							f.write('{}\t{}\n'.format(j,banner))
+						f.write('{}\t{}\n'.format(j,banner))
 
 	## Record time of program stopping and display the time running to the user
 	endTime = time.time()
 	totalTime = round(endTime - startTime, 2)
 
-	if OUTFILE == "empty_outfile":
-		print("Scan done in {} seconds".format(totalTime))
-	else:
-		f.write("Scan done in {} seconds\n".format(totalTime))
-		f.close()
-		print("Results written to {}".format(OUTFILE))
+	f.write("Scan done in {} seconds\n".format(totalTime))
+	f.close()
 
+	if OUTFILE != "empty_outfile":
+		print("Results written to {}".format(OUTFILE))
 	## We are done here
 	exit()
 
