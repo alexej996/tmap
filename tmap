@@ -186,8 +186,6 @@ def main():
 		f.close()
 		print("Results written to {}".format(OUTFILE))
 
-	## We are done here
-	exit()
 
 if __name__ == "__main__":
 	main()
