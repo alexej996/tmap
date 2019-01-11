@@ -6,6 +6,26 @@ import time
 from ipaddress import *
 import threading
 
+## Receive first 80 bytes from port, return string of received data
+def getBanner(host, port, wait, notor):
+	## If notor is set to True, it doesn't use the socks proxy
+	if notor:
+		sckt = socket(AF_INET, SOCK_STREAM)
+	else:
+		sckt = socks.socksocket()
+
+	sckt.settimeout(wait)
+	## connect and return banner
+	try:
+		sckt.connect((host, port))
+		banner = sckt.recv(80)
+		sckt.close()
+		return banner.decode().replace('\n','')
+	except KeyboardInterrupt:
+		exit()
+	except:
+		return "banner_error"
+
 ## Open connection on specific port, return True if successful
 def connScan(host, port, wait, notor, openports):
 	## If notor is set to True, it doesn't use the socks proxy
@@ -94,6 +114,7 @@ def main():
 	parser.add_argument("-p", "--ports", metavar="PORTS", dest="tgtPort", help="ports to scan, seperated by a comma", default="20-25,53,80-85,443-445,8080,8333,9050,9150")
 	parser.add_argument("-t", "--timeout", metavar="TIMEOUT", dest="sockTimeout", type=int, help="seconds to wait before connection timeout for each port", default=3)
 	parser.add_argument("--clearnet", dest="clearnet", help="don't use Tor for scanning, connect directly instead", action="store_true")
+	parser.add_argument("--banner", dest="banner", help="print data received from open ports", action="store_true")
 	parser.add_argument("--torport", metavar="TORPORT", dest="torPort", type=int, help="port on which Tor is listening on", default="9050")
 	parser.add_argument("-j", "--jobs", metavar="JOBS", dest="jobs", type=int, help="maximum number of open connections at the same time", default="8")
 	parser.add_argument("--output", metavar="OUTFILE", dest="outFile", help="write scan results to output file", default="empty_outfile")
@@ -156,11 +177,15 @@ def main():
 	HOSTS = args.HOSTS.split(",")
 	WAIT_TIME = args.sockTimeout
 	CLEARNET = False
+	BANNER = False
 	OUTFILE = args.outFile
 	JOBS = args.jobs
 
 	if args.clearnet:
 		CLEARNET=True
+
+	if args.banner:
+		BANNER=True
 
 	## Check if Tor is running
 	emptylist=list()
@@ -185,13 +210,26 @@ def main():
 		if OUTFILE == "empty_outfile":
 			print("Results for: {}".format(h))
 		else:
-			f.write("Results for: {}".format(h))
+			f.write("Results for: {}\n".format(h))
 		for i in r.keys():
 			if len(r[i]) != 0:
 				if OUTFILE == "empty_outfile":
 					print('{} open ports: {}'.format(i, str(r[i])))
+					if BANNER:
+						print('PORT\tBANNER')
 				else:
 					f.write('{} open ports: {}\n'.format(i, str(r[i])))
+					if BANNER:
+						f.write('PORT\tBANNER\n')
+				if BANNER:
+					for j in r[i]:
+						banner = getBanner(i,j,WAIT_TIME, CLEARNET)
+						if banner == "banner_error" or banner == '':
+							continue
+						if OUTFILE == "empty_outfile":
+							print('{}\t{}'.format(j,banner))
+						else:
+							f.write('{}\t{}\n'.format(j,banner))
 
 	## Record time of program stopping and display the time running to the user
 	endTime = time.time()
