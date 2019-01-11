@@ -86,7 +86,7 @@ def hostScan(host, ports, wait, notor, jobs):
 		if ips.num_addresses > 1:
 			for ip in ips.hosts():
 				if ip.is_private:
-					ret[str(ip)] = portScan(str(ip), ports, wait, True. jobs)
+					ret[str(ip)] = portScan(str(ip), ports, wait, True, jobs)
 				else:
 					ret[str(ip)] = portScan(str(ip), ports, wait, notor, jobs)
 		else:
@@ -228,10 +228,10 @@ def main():
 	totalTime = round(endTime - startTime, 2)
 
 	f.write("Scan done in {} seconds\n".format(totalTime))
-	f.close()
 
 	if OUTFILE != "empty_outfile":
 		print("Results written to {}".format(OUTFILE))
+		f.close()
 	## We are done here
 	exit()
 
