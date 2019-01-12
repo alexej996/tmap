@@ -243,8 +243,6 @@ def main():
 	if OUTFILE != "empty_outfile":
 		print("Results written to {}".format(OUTFILE))
 		f.close()
-	## We are done here
-	exit()
 
 if __name__ == "__main__":
 	main()
