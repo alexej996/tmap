@@ -9,6 +9,13 @@ import threading
 
 ## Receive first 80 bytes from port, return string of received data
 def getBanner(host, port, wait, notor):
+	## Don't use Tor if private address
+	try:
+		if ip_address(host).is_private:
+			notor = True
+	except:
+		pass
+
 	## If notor is set to True, it doesn't use the socks proxy
 	if notor:
 		sckt = socket(AF_INET, SOCK_STREAM)
@@ -211,20 +218,21 @@ def main():
 	for h in HOSTS:
 		r = hostScan(h, PORTS, WAIT_TIME, CLEARNET, JOBS)
 		for i in r.keys():
-			if len(r[i]) != 0:
-				f.write('Tmap scan report for {}\n'.format(i))
-				if BANNER == False:
-					f.write('PORT\tSTATE\n')
-					for j in r[i]:
+			if len(r[i]) == 0:
+				continue
+			f.write('Tmap scan report for {}\n'.format(i))
+			if BANNER == False:
+				f.write('PORT\tSTATE\n')
+				for j in r[i]:
+					f.write('{}\topen\n'.format(j))
+			if BANNER:
+				f.write('PORT\tSTATE\tBANNER\n')
+				for j in r[i]:
+					banner = getBanner(i,j,WAIT_TIME, CLEARNET)
+					if banner == "banner_error":
 						f.write('{}\topen\n'.format(j))
-				if BANNER:
-					f.write('PORT\tSTATE\tBANNER\n')
-					for j in r[i]:
-						banner = getBanner(i,j,WAIT_TIME, CLEARNET)
-						if banner == "banner_error":
-							f.write('{}\topen\n'.format(j))
-						else:
-							f.write('{}\topen\t{}\n'.format(j,banner))
+					else:
+						f.write('{}\topen\t{}\n'.format(j,banner))
 
 	## Record time of program stopping and display the time running to the user
 	endTime = time.time()
