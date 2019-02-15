@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import sys
 from socket import *
 import socks
@@ -6,6 +6,8 @@ import argparse
 import time
 from ipaddress import *
 import threading
+
+VERSION='1.2.1'
 
 ## Receive first 80 bytes from port, return string of received data
 def getBanner(host, port, wait, notor):
@@ -131,7 +133,7 @@ def main():
 
 	## Version argument
 	if args.version:
-		print("Tmap 1.0.0")
+		print("Tmap " + VERSION)
 		print("License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>")
 		print("This is free software: you are free to change and redistribute it.")
 		print("There is NO WARRANTY, to the extent permitted by law.")
