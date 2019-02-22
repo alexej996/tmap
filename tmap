@@ -9,9 +9,11 @@ import threading
 
 VERSION='1.2.1'
 
-## Receive first 80 bytes from port, return string of received data
 def getBanner(host, port, wait, notor):
-	## Don't use Tor if private address
+        """
+            Receive first 80 bytes from port, return string of received data
+            Don't use Tor if address is private.
+        """
 	try:
 		if ip_address(host).is_private:
 			notor = True
@@ -36,9 +38,12 @@ def getBanner(host, port, wait, notor):
 	except:
 		return "banner_error"
 
-## Open connection on specific port, return True if successful
+
 def connScan(host, port, wait, notor, openports):
-	## If notor is set to True, it doesn't use the socks proxy
+        """ 
+         Open connection on specific port, return True if successful
+	 If notor is set to True, it doesn't use the socks proxy 
+        """
 	if notor:
 		sckt = socket(AF_INET, SOCK_STREAM)
 	else:
@@ -57,9 +62,11 @@ def connScan(host, port, wait, notor, openports):
 		return False
 
 
-## Go through all ports and call connScan for each, return list of open ports
-## If more threads than JOBS, wait until they finish
 def portScan(host, ports, wait, notor, jobs):
+        """
+        Go through all ports and call connScan for each, return list of open ports
+        If there is more threads than JOBS, wait until they finish.
+        """
 	openports = list()
 	threads = list()
 
@@ -80,8 +87,10 @@ def portScan(host, ports, wait, notor, jobs):
 
 	return openports
 
-## Go through all hosts and call portScan for each one, return dictionary of hosts with their open ports
 def hostScan(host, ports, wait, notor, jobs):
+        """
+        Go through all hosts and call portScan for each one, return dictionary of hosts with their open ports
+        """
 	ret = dict()
 	## Check if python version 3
 	try:
