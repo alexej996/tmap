@@ -10,250 +10,250 @@ import threading
 VERSION='1.2.1'
 
 def getBanner(host, port, wait, notor):
-        """
+    """
             Receive first 80 bytes from port, return string of received data
             Don't use Tor if address is private.
-        """
-	try:
-		if ip_address(host).is_private:
-			notor = True
-	except:
-		pass
+    """
+    try:
+        if ip_address(host).is_private:
+            notor = True
+    except:
+        pass
 
-	## If notor is set to True, it doesn't use the socks proxy
-	if notor:
-		sckt = socket(AF_INET, SOCK_STREAM)
-	else:
-		sckt = socks.socksocket()
+    ## If notor is set to True, it doesn't use the socks proxy
+    if notor:
+        sckt = socket(AF_INET, SOCK_STREAM)
+    else:
+        sckt = socks.socksocket()
 
-	sckt.settimeout(wait)
-	## connect and return banner
-	try:
-		sckt.connect((host, port))
-		banner = sckt.recv(80)
-		sckt.close()
-		return banner.decode().replace('\n','')
-	except KeyboardInterrupt:
-		exit()
-	except:
-		return "banner_error"
+    sckt.settimeout(wait)
+    ## connect and return banner
+    try:
+        sckt.connect((host, port))
+        banner = sckt.recv(80)
+        sckt.close()
+        return banner.decode().replace('\n','')
+    except KeyboardInterrupt:
+        exit()
+    except:
+        return "banner_error"
 
 
 def connScan(host, port, wait, notor, openports):
-        """ 
+    """ 
          Open connection on specific port, return True if successful
-	 If notor is set to True, it doesn't use the socks proxy 
-        """
-	if notor:
-		sckt = socket(AF_INET, SOCK_STREAM)
-	else:
-		sckt = socks.socksocket()
+         If notor is set to True, it doesn't use the socks proxy
+    """
+    if notor:
+        sckt = socket(AF_INET, SOCK_STREAM)
+    else:
+        sckt = socks.socksocket()
 
-	sckt.settimeout(wait)
-	## Try to connect, return True on success and add to openports, return False on failure
-	try:
-		sckt.connect((host, port))
-		sckt.close()
-		openports.append(port)
-		return True
-	except KeyboardInterrupt:
-		exit()
-	except:
-		return False
+    sckt.settimeout(wait)
+    ## Try to connect, return True on success and add to openports, return False on failure
+    try:
+        sckt.connect((host, port))
+        sckt.close()
+        openports.append(port)
+        return True
+    except KeyboardInterrupt:
+        exit()
+    except:
+        return False
 
 
 def portScan(host, ports, wait, notor, jobs):
-        """
+    """
         Go through all ports and call connScan for each, return list of open ports
         If there is more threads than JOBS, wait until they finish.
-        """
-	openports = list()
-	threads = list()
+    """
+    openports = list()
+    threads = list()
 
-	for p in ports:
-		if p > 65535:
-			return openports
+    for p in ports:
+        if p > 65535:
+            return openports
 
-		while  threading.activeCount() >= jobs + 1:
-			pass
+        while  threading.activeCount() >= jobs + 1:
+            pass
 
-		thread=threading.Thread(target=connScan,args=(host, p, wait, notor, openports))
-		threads.append(thread)
-		thread.start()
+        thread=threading.Thread(target=connScan,args=(host, p, wait, notor, openports))
+        threads.append(thread)
+        thread.start()
 
-	## Wait until all threads are done
-	for thread in threads:
-		thread.join()
+    ## Wait until all threads are done
+    for thread in threads:
+        thread.join()
 
-	return openports
+    return openports
 
 def hostScan(host, ports, wait, notor, jobs):
-        """
+    """
         Go through all hosts and call portScan for each one, return dictionary of hosts with their open ports
-        """
-	ret = dict()
-	## Check if python version 3
-	try:
-		host = unicode(host)
-	except:
-		pass
+    """
+    ret = dict()
+    ## Check if python version 3
+    try:
+        host = unicode(host)
+    except:
+        pass
 
-	## Check if host is a network range, don't use tor for private IPs
-	try:
-		ips = ip_network(host)
-		if ips.num_addresses > 1:
-			for ip in ips.hosts():
-				if ip.is_private:
-					ret[str(ip)] = portScan(str(ip), ports, wait, True, jobs)
-				else:
-					ret[str(ip)] = portScan(str(ip), ports, wait, notor, jobs)
-		else:
-			if ips.is_private:
-				ret[str(host)] = portScan(str(host), ports, wait, True, jobs)
-			else:
-				ret[str(host)] = portScan(str(host), ports, wait, notor, jobs)
-	## Otherwise scan host as usual
-	except:
-		if host == 'localhost':
-			ret[str(host)] = portScan(str(host), ports, wait, True, jobs)
-		else:
-			ret[str(host)] = portScan(str(host), ports, wait, notor, jobs)
+    ## Check if host is a network range, don't use tor for private IPs
+    try:
+        ips = ip_network(host)
+        if ips.num_addresses > 1:
+            for ip in ips.hosts():
+                if ip.is_private:
+                    ret[str(ip)] = portScan(str(ip), ports, wait, True, jobs)
+                else:
+                    ret[str(ip)] = portScan(str(ip), ports, wait, notor, jobs)
+        else:
+            if ips.is_private:
+                ret[str(host)] = portScan(str(host), ports, wait, True, jobs)
+            else:
+                ret[str(host)] = portScan(str(host), ports, wait, notor, jobs)
+    ## Otherwise scan host as usual
+    except:
+        if host == 'localhost':
+            ret[str(host)] = portScan(str(host), ports, wait, True, jobs)
+        else:
+            ret[str(host)] = portScan(str(host), ports, wait, notor, jobs)
 
-	return ret
+    return ret
 
 def main():
-	## Record time of program starting in seconds
-	startTime = time.time()
+    ## Record time of program starting in seconds
+    startTime = time.time()
 
-	## Define and parse the arguments
-	parser = argparse.ArgumentParser(description="Simple stateful port scanner that works over Tor")
-	parser.add_argument("--version", dest="version", help="print version information and exit", action="store_true")
-	parser.add_argument("HOSTS", help="IP address or domain to scan", default="empty_host", nargs="?")
-	parser.add_argument("-H", "--hosts", metavar="HOSTS", dest="tgtHost", help="IP address or domain to scan", default="empty_host_option")
-	parser.add_argument("-p", "--ports", metavar="PORTS", dest="tgtPort", help="ports to scan, seperated by a comma", default="20-25,53,80-85,443-445,8080,8333,9050,9150")
-	parser.add_argument("-t", "--timeout", metavar="TIMEOUT", dest="sockTimeout", type=int, help="seconds to wait before connection timeout for each port", default=3)
-	parser.add_argument("--clearnet", dest="clearnet", help="don't use Tor for scanning, connect directly instead", action="store_true")
-	parser.add_argument("--banner", dest="banner", help="print data received from open ports", action="store_true")
-	parser.add_argument("--torport", metavar="TORPORT", dest="torPort", type=int, help="port on which Tor is listening on", default="9050")
-	parser.add_argument("-j", "--jobs", metavar="JOBS", dest="jobs", type=int, help="maximum number of open connections at the same time", default="8")
-	parser.add_argument("--output", metavar="OUTFILE", dest="outFile", help="write scan results to output file", default="empty_outfile")
+    ## Define and parse the arguments
+    parser = argparse.ArgumentParser(description="Simple stateful port scanner that works over Tor")
+    parser.add_argument("--version", dest="version", help="print version information and exit", action="store_true")
+    parser.add_argument("HOSTS", help="IP address or domain to scan", default="empty_host", nargs="?")
+    parser.add_argument("-H", "--hosts", metavar="HOSTS", dest="tgtHost", help="IP address or domain to scan", default="empty_host_option")
+    parser.add_argument("-p", "--ports", metavar="PORTS", dest="tgtPort", help="ports to scan, seperated by a comma", default="20-25,53,80-85,443-445,8080,8333,9050,9150")
+    parser.add_argument("-t", "--timeout", metavar="TIMEOUT", dest="sockTimeout", type=int, help="seconds to wait before connection timeout for each port", default=3)
+    parser.add_argument("--clearnet", dest="clearnet", help="don't use Tor for scanning, connect directly instead", action="store_true")
+    parser.add_argument("--banner", dest="banner", help="print data received from open ports", action="store_true")
+    parser.add_argument("--torport", metavar="TORPORT", dest="torPort", type=int, help="port on which Tor is listening on", default="9050")
+    parser.add_argument("-j", "--jobs", metavar="JOBS", dest="jobs", type=int, help="maximum number of open connections at the same time", default="8")
+    parser.add_argument("--output", metavar="OUTFILE", dest="outFile", help="write scan results to output file", default="empty_outfile")
 
-	args = parser.parse_args()
+    args = parser.parse_args()
 
-	## Version argument
-	if args.version:
-		print("Tmap " + VERSION)
-		print("License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>")
-		print("This is free software: you are free to change and redistribute it.")
-		print("There is NO WARRANTY, to the extent permitted by law.")
-		exit()
+    ## Version argument
+    if args.version:
+        print("Tmap " + VERSION)
+        print("License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>")
+        print("This is free software: you are free to change and redistribute it.")
+        print("There is NO WARRANTY, to the extent permitted by law.")
+        exit()
 
-	## Set Tor as default Tor proxy for the scanner
-	socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", args.torPort)
+    ## Set Tor as default Tor proxy for the scanner
+    socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", args.torPort)
 
-	## Combine HOST and --hosts values
-	if args.HOSTS == "empty_host":
-		if args.tgtHost == "empty_host_option":
-			parser.print_help()
-			print ("Host must be specified")
-			exit()
-		else:
-			args.HOSTS = args.tgtHost
-	else:
-		if args.tgtHost != "empty_host_option":
-			args.HOSTS = args.HOSTS + "," + args.tgtHost
+    ## Combine HOST and --hosts values
+    if args.HOSTS == "empty_host":
+        if args.tgtHost == "empty_host_option":
+            parser.print_help()
+            print ("Host must be specified")
+            exit()
+        else:
+            args.HOSTS = args.tgtHost
+    else:
+        if args.tgtHost != "empty_host_option":
+            args.HOSTS = args.HOSTS + "," + args.tgtHost
 
-	## Load specified ports into PORTS list
-	PORTS = list()
-	for p in args.tgtPort.split(","):
-		## If p is not a range, add it to the list of ports to scan
-		if "-" not in p:
-			try:
-				p = int(p)
-				PORTS.append(p)
-			except:
-				parser.print_help()
-				print("Ports must be integers")
-				exit()
-		## If p is a range, add a range of ports to the list of ports to scan
-		else:
-			try:
-				p = list(map(int, p.split("-")))
-			except:
-				parser.print_help()
-				print("Ports in a range must be integers")
-				exit()
-			## Range needs to be defined as exactly two integers separated by "-"
-			if len(p) != 2 or p[0] > p[1]:
-				parser.print_help()
-				print("Port range improperly defined")
-				exit()
-			else:
-				p = list(range(p[0],p[1]+1))
-				PORTS += p
+    ## Load specified ports into PORTS list
+    PORTS = list()
+    for p in args.tgtPort.split(","):
+        ## If p is not a range, add it to the list of ports to scan
+        if "-" not in p:
+            try:
+                p = int(p)
+                PORTS.append(p)
+            except:
+                parser.print_help()
+                print("Ports must be integers")
+                exit()
+        ## If p is a range, add a range of ports to the list of ports to scan
+        else:
+            try:
+                p = list(map(int, p.split("-")))
+            except:
+                parser.print_help()
+                print("Ports in a range must be integers")
+                exit()
+            ## Range needs to be defined as exactly two integers separated by "-"
+            if len(p) != 2 or p[0] > p[1]:
+                parser.print_help()
+                print("Port range improperly defined")
+                exit()
+            else:
+                p = list(range(p[0],p[1]+1))
+                PORTS += p
 
-	## Load other variables
-	HOSTS = args.HOSTS.split(",")
-	WAIT_TIME = args.sockTimeout
-	CLEARNET = False
-	BANNER = False
-	OUTFILE = args.outFile
-	JOBS = args.jobs
+    ## Load other variables
+    HOSTS = args.HOSTS.split(",")
+    WAIT_TIME = args.sockTimeout
+    CLEARNET = False
+    BANNER = False
+    OUTFILE = args.outFile
+    JOBS = args.jobs
 
-	if args.clearnet:
-		CLEARNET=True
+    if args.clearnet:
+        CLEARNET=True
 
-	if args.banner:
-		BANNER=True
+    if args.banner:
+        BANNER=True
 
-	## Check if Tor is running
-	emptylist=list()
-	if CLEARNET == False:
-		if connScan("127.0.0.1", args.torPort, 3, True, emptylist):
-			pass
-		else:
-			print("Tor is not running on port {}.".format(args.torPort))
-			exit()
+    ## Check if Tor is running
+    emptylist=list()
+    if CLEARNET == False:
+        if connScan("127.0.0.1", args.torPort, 3, True, emptylist):
+            pass
+        else:
+            print("Tor is not running on port {}.".format(args.torPort))
+            exit()
 
-	## Checking for file output
-	if OUTFILE != "empty_outfile":
-		f = open(OUTFILE, "w")
-	else:
-		f = sys.stdout
+    ## Checking for file output
+    if OUTFILE != "empty_outfile":
+        f = open(OUTFILE, "w")
+    else:
+        f = sys.stdout
 
-	## Display message that scan is starting
-	f.write("Starting a scan...\n")
+    ## Display message that scan is starting
+    f.write("Starting a scan...\n")
 
-	## Scan each host in HOSTS list
-	r = dict()
-	for h in HOSTS:
-		r = hostScan(h, PORTS, WAIT_TIME, CLEARNET, JOBS)
-		for i in r.keys():
-			if len(r[i]) == 0:
-				continue
-			f.write('Tmap scan report for {}\n'.format(i))
-			if BANNER == False:
-				f.write('PORT\tSTATE\n')
-				for j in r[i]:
-					f.write('{}\topen\n'.format(j))
-			if BANNER:
-				f.write('PORT\tSTATE\tBANNER\n')
-				for j in r[i]:
-					banner = getBanner(i,j,WAIT_TIME, CLEARNET)
-					if banner == "banner_error":
-						f.write('{}\topen\n'.format(j))
-					else:
-						f.write('{}\topen\t{}\n'.format(j,banner))
+    ## Scan each host in HOSTS list
+    r = dict()
+    for h in HOSTS:
+        r = hostScan(h, PORTS, WAIT_TIME, CLEARNET, JOBS)
+        for i in r.keys():
+            if len(r[i]) == 0:
+                continue
+            f.write('Tmap scan report for {}\n'.format(i))
+            if BANNER == False:
+                f.write('PORT\tSTATE\n')
+                for j in r[i]:
+                    f.write('{}\topen\n'.format(j))
+            if BANNER:
+                f.write('PORT\tSTATE\tBANNER\n')
+                for j in r[i]:
+                    banner = getBanner(i,j,WAIT_TIME, CLEARNET)
+                    if banner == "banner_error":
+                        f.write('{}\topen\n'.format(j))
+                    else:
+                        f.write('{}\topen\t{}\n'.format(j,banner))
 
-	## Record time of program stopping and display the time running to the user
-	endTime = time.time()
-	totalTime = round(endTime - startTime, 2)
+    ## Record time of program stopping and display the time running to the user
+    endTime = time.time()
+    totalTime = round(endTime - startTime, 2)
 
-	f.write("Scan done in {} seconds\n".format(totalTime))
+    f.write("Scan done in {} seconds\n".format(totalTime))
 
-	if OUTFILE != "empty_outfile":
-		print("Results written to {}".format(OUTFILE))
-		f.close()
+    if OUTFILE != "empty_outfile":
+        print("Results written to {}".format(OUTFILE))
+        f.close()
 
 if __name__ == "__main__":
-	main()
+    main()
