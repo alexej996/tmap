@@ -7,12 +7,14 @@ import time
 from ipaddress import *
 import threading
 
-VERSION='1.2.1'
+VERSION='1.3.0'
 
 def getPortInfo(port, portfile):
     """
            Get info about service commonly used on this port
     """
+    ## Start reading the file from start of the file
+    portfile.seek(0)
     ## Read every line until EOF
     line = "init"
     while line != '':
