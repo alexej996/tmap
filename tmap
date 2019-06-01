@@ -9,6 +9,28 @@ import threading
 
 VERSION='1.2.1'
 
+def getPortInfo(port, portfile):
+    """
+           Get info about service commonly used on this port
+    """
+    ## Read every line until EOF
+    while (line = f.readline()) != '':
+        ## Don't read lines that are commented out
+        if line[0] == '#':
+            pass
+
+        ## Split line using tab as delimiter and read the port number
+        split_line = line.split('\t')
+        portnum = split_line[1].split('/')[0]
+
+        ## If portnum equals port return the name of service
+        if int(portnum) != port:
+            pass
+        else:
+            return split_line[0]
+    return "portinfo_error"
+
+
 def getBanner(host, port, wait, notor):
     """
             Receive first 80 bytes from port, return string of received data
