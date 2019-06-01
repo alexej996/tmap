@@ -14,18 +14,21 @@ def getPortInfo(port, portfile):
            Get info about service commonly used on this port
     """
     ## Read every line until EOF
-    while (line = f.readline()) != '':
+    line = "init"
+    while line != '':
+        line = portfile.readline()
         ## Don't read lines that are commented out
         if line[0] == '#':
-            pass
+            continue
 
         ## Split line using tab as delimiter and read the port number
         split_line = line.split('\t')
+
         portnum = split_line[1].split('/')[0]
 
         ## If portnum equals port return the name of service
         if int(portnum) != port:
-            pass
+            continue
         else:
             return split_line[0]
     return "portinfo_error"
@@ -173,6 +176,9 @@ def main():
     ## Set Tor as default Tor proxy for the scanner
     socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", args.torPort)
 
+    ## Load nmap-services file
+    PORTFILE = open("nmap-services", "r")
+
     ## Combine HOST and --hosts values
     if args.HOSTS == "empty_host":
         if args.tgtHost == "empty_host_option":
@@ -255,17 +261,19 @@ def main():
                 continue
             f.write('Tmap scan report for {}\n'.format(i))
             if BANNER == False:
-                f.write('PORT\tSTATE\n')
+                f.write('PORT\tSTATE\tSERVICE\n')
                 for j in r[i]:
-                    f.write('{}\topen\n'.format(j))
+                    service = getPortInfo(j,PORTFILE)
+                    f.write('{}\topen\t{}\n'.format(j,service))
             if BANNER:
-                f.write('PORT\tSTATE\tBANNER\n')
+                f.write('PORT\tSTATE\tSERVICE\tBANNER\n')
                 for j in r[i]:
                     banner = getBanner(i,j,WAIT_TIME, CLEARNET)
+                    service = getPortInfo(j,PORTFILE)
                     if banner == "banner_error":
-                        f.write('{}\topen\n'.format(j))
+                        f.write('{}\topen\t{}\n'.format(j,service))
                     else:
-                        f.write('{}\topen\t{}\n'.format(j,banner))
+                        f.write('{}\topen\t{}\t{}\n'.format(j,service,banner))
 
     ## Record time of program stopping and display the time running to the user
     endTime = time.time()
