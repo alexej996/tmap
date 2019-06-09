@@ -7,7 +7,7 @@ It was modifed to work over **Tor** for anonymous and hidden service scanning.
 ### Dependencies
 Tmap is a python script that requries the **socks** module and a running Tor deamon on localhost.
 
-Tmap is built to support **pyhton3**.
+Tmap is built to support **python3**.
 
 ### Usage:
 `./tmap [-h] -H HOSTS [-p PORTS] [-t TIMEOUT] [--clearnet] [--torport TORPORT]`
