@@ -257,7 +257,11 @@ def main():
     ## Scan each host in HOSTS list
     r = dict()
     for h in HOSTS:
-        r = hostScan(h, PORTS, WAIT_TIME, CLEARNET, JOBS)
+        if h[-6:] == '.onion':
+            ## Onion hosts need to be scanned one port at a time,for some reason
+            r = hostScan(h, PORTS, WAIT_TIME, CLEARNET, 1)
+        else:
+            r = hostScan(h, PORTS, WAIT_TIME, CLEARNET, JOBS)
         for i in r.keys():
             if len(r[i]) == 0:
                 continue
