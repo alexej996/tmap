@@ -13,6 +13,7 @@ def getPortInfo(port, portfile):
     """
            Get info about service commonly used on this port
     """
+
     ## Start reading the file from start of the file
     portfile.seek(0)
     ## Read every line until EOF
@@ -41,6 +42,8 @@ def getBanner(host, port, wait, notor):
             Receive first 80 bytes from port, return string of received data
             Don't use Tor if address is private.
     """
+
+    ## Check if IP address is private
     try:
         if ip_address(host).is_private:
             notor = True
@@ -67,10 +70,12 @@ def getBanner(host, port, wait, notor):
 
 
 def connScan(host, port, wait, notor, openports):
-    """ 
+    """
          Open connection on specific port, return True if successful
          If notor is set to True, it doesn't use the socks proxy
     """
+
+    ## Check if tor is to be used for connection
     if notor:
         sckt = socket(AF_INET, SOCK_STREAM)
     else:
@@ -94,9 +99,13 @@ def portScan(host, ports, wait, notor, jobs):
         Go through all ports and call connScan for each, return list of open ports
         If there is more threads than JOBS, wait until they finish.
     """
+
+    ## openports is the list of ports that are open, this is the return value
+    ## threads is the list of threads currently active
     openports = list()
     threads = list()
 
+    ## If port is valid and there aren't more then JOBS number of threads, start a new thread with a next port to scan
     for p in ports:
         if p > 65535:
             return openports
@@ -118,6 +127,8 @@ def hostScan(host, ports, wait, notor, jobs):
     """
         Go through all hosts and call portScan for each one, return dictionary of hosts with their open ports
     """
+
+    ## ret will be the return value
     ret = dict()
     ## Check if python version 3
     try:
@@ -149,6 +160,11 @@ def hostScan(host, ports, wait, notor, jobs):
     return ret
 
 def parseArgs(parser):
+    """
+        Parse all arguments and return the list of argument values
+    """
+
+    ## Every line here represents one argument that can be used in Tmap
     parser.add_argument("--version", dest="version", help="print version information and exit", action="store_true")
     parser.add_argument("HOSTS", help="IP address or domain to scan", default="empty_host", nargs="?")
     parser.add_argument("-H", "--hosts", metavar="HOSTS", dest="tgtHost", help="IP address or domain to scan", default="empty_host_option")
@@ -262,20 +278,25 @@ def main():
             r = hostScan(h, PORTS, WAIT_TIME, CLEARNET, 1)
         else:
             r = hostScan(h, PORTS, WAIT_TIME, CLEARNET, JOBS)
+        ## Result of the scan for each host we store in r variable
         for i in r.keys():
+            ## if there is nothing wirtten, there are no ports open on that host, skip to next one
             if len(r[i]) == 0:
                 continue
             f.write('Tmap scan report for {}\n'.format(i))
+            ## If BANNER argument isn's specified only print ports and their respective service
             if BANNER == False:
                 f.write('PORT\tSTATE\tSERVICE\n')
                 for j in r[i]:
                     service = getPortInfo(j,PORTFILE)
                     f.write('{}\topen\t{}\n'.format(j,service))
+            ## If BANNER is specified, retrive banner for each port and print it next to earlier port reports
             if BANNER:
                 f.write('PORT\tSTATE\tSERVICE\tBANNER\n')
                 for j in r[i]:
                     banner = getBanner(i,j,WAIT_TIME, CLEARNET)
                     service = getPortInfo(j,PORTFILE)
+                    ## If there was error when reading banner, don't print nothing in it's place
                     if banner == "banner_error":
                         f.write('{}\topen\t{}\n'.format(j,service))
                     else:
@@ -287,6 +308,7 @@ def main():
 
     f.write("Scan done in {} seconds\n".format(totalTime))
 
+    ## If output file is defined inform the user where the results are written
     if OUTFILE != "empty_outfile":
         print("Results written to {}".format(OUTFILE))
         f.close()
