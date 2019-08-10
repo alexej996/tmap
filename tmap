@@ -57,16 +57,33 @@ def getBanner(host, port, wait, notor):
         sckt = socks.socksocket()
 
     sckt.settimeout(wait)
-    ## connect and return banner
+    ## Try to connect
     try:
         sckt.connect((host, port))
+    except:
+        return "banner_error"
+    ## Try to retrive data without sending anything
+    try:
         banner = sckt.recv(80)
         sckt.close()
         return banner.decode().replace('\n','')
     except KeyboardInterrupt:
         exit()
-    except:
-        return "banner_error"
+    except Exception as e:
+        ## If the connection timed out, try to send HTTP GET request
+        if str(e) == 'timed out':
+            try:
+                ## Pretend to be mozzila firefox in the payload
+                payload = "GET / HTTP/1.1\r\nHost: " + str(host) + "\r\nUser-Agent: Mozilla/5.0\r\n\r\n"
+                ## Encode the payload and send it all
+                sckt.sendall(payload.encode())
+                banner = sckt.recv(20)
+                sckt.close()
+                return banner.decode().replace('\n','')
+            except:
+                return "banner_error"
+        else:
+            return "banner_error"
 
 
 def connScan(host, port, wait, notor, openports):
