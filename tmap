@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 import sys
 from socket import *
-import socks
 import argparse
 import time
 from ipaddress import *
 import threading
+
+try:
+	import socks
+except ImportError as ie:
+	print("Socks module not found.\nMake sure to install all requirements with\npip3 install -r requirments.txt")
+	exit()
 
 VERSION='1.3.1'
 
