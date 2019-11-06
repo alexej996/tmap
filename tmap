@@ -186,11 +186,12 @@ def parseArgs(parser):
         Parse all arguments and return the list of argument values
     """
 
+    commonPorts = "80,631,161,137,123,138,1434,445,135,67,23,53,443,21,139,22,500,68,520,1900,25,4500,514,49152,162,69,5353,111,49154,3389,110,1701,998,996,997,999,3283,49153,1812,136,143,2222,3306,2049,32768,5060,8080,1025,1433,3456,1723,995,993,20031,1026,7,5900,1646,1645,593,518,2048,626,1027,587,177,1719,427,497,8888,4444,1023,65024,199,19,9,49193,1029,1720,49,465,88,1028,17185,1718,49186,548,113,81,6001,2000,10000,31337,9001,8333"
     ## Every line here represents one argument that can be used in Tmap
     parser.add_argument("--version", dest="version", help="print version information and exit", action="store_true")
     parser.add_argument("HOSTS", help="IP address or domain to scan", default="empty_host", nargs="?")
     parser.add_argument("-H", "--hosts", metavar="HOSTS", dest="tgtHost", help="IP address or domain to scan", default="empty_host_option")
-    parser.add_argument("-p", "--ports", metavar="PORTS", dest="tgtPort", help="ports to scan, seperated by a comma", default="80,631,161,137,123,138,1434,445,135,67,23,53,443,21,139,22,500,68,520,1900,25,4500,514,49152,162,69,5353,111,49154,3389,110,1701,998,996,997,999,3283,49153,1812,136,143,2222,3306,2049,32768,5060,8080,1025,1433,3456,1723,995,993,20031,1026,7,5900,1646,1645,593,518,2048,626,1027,587,177,1719,427,497,8888,4444,1023,65024,199,19,9,49193,1029,1720,49,465,88,1028,17185,1718,49186,548,113,81,6001,2000,10000,31337,9001,8333")
+    parser.add_argument("-p", "--ports", metavar="PORTS", dest="tgtPort", help="ports to scan, seperated by a comma", default=commonPorts)
     parser.add_argument("-t", "--timeout", metavar="TIMEOUT", dest="sockTimeout", type=int, help="seconds to wait before connection timeout for each port", default=3)
     parser.add_argument("--clearnet", dest="clearnet", help="don't use Tor for scanning, connect directly instead", action="store_true")
     parser.add_argument("--banner", dest="banner", help="print data received from open ports", action="store_true")
@@ -222,8 +223,8 @@ def main():
     ## Combine HOST and --hosts values
     if args.HOSTS == "empty_host":
         if args.tgtHost == "empty_host_option":
-            parser.print_help()
             print ("Host must be specified")
+            parser.print_help()
             exit()
         else:
             args.HOSTS = args.tgtHost
@@ -263,16 +264,10 @@ def main():
     ## Load other variables
     HOSTS = args.HOSTS.split(",")
     WAIT_TIME = args.sockTimeout
-    CLEARNET = False
-    BANNER = False
+    CLEARNET = True if args.clearnet else False
+    BANNER = True if args.banner else False
     OUTFILE = args.outFile
     JOBS = args.jobs
-
-    if args.clearnet:
-        CLEARNET=True
-
-    if args.banner:
-        BANNER=True
 
     ## Check if Tor is running
     emptylist=list()
