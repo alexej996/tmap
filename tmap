@@ -204,7 +204,8 @@ def parseArgs(parser):
 def main():
     ## Record time of program starting in seconds
     startTime = time.time()
-    args = parseArgs(argparse.ArgumentParser(description="Simple stateful port scanner that works over Tor"))
+    parser = argparse.ArgumentParser(description="Simple stateful port scanner that works over Tor")
+    args = parseArgs(parser)
 
     ## Version argument
     if args.version:
