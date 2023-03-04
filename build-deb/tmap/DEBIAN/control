@@ -1,0 +1,11 @@
+Package: tmap
+Section: net
+Priority: optional
+Architecture: all
+Essential: no
+Installed-Size: 2000
+Depends: python3-socks, tor
+Homepage: https://github.com/alexej996/tmap
+Maintainer: Aleksej Jocic <aleksej@fedora.email>
+Description: Simple stateful port scanner that works over Tor
+Version: 1.3.2
