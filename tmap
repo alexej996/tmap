@@ -130,7 +130,7 @@ def portScan(host, ports, wait, notor, jobs):
         if p > 65535:
             return openports
 
-        while threading.activeCount() >= jobs + 1:
+        while threading.active_count() >= jobs + 1:
             pass
 
         try:
